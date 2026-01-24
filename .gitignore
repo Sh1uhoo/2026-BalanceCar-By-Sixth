@@ -1,0 +1,22 @@
+# Keil中间文件
+*.o
+*.d
+*.axf
+*.hex
+*.bin
+*.lst
+*.map
+*.htm
+*.dep
+# Keil缓存目录
+Objects/
+Listings/
+# 其他临时文件
+*.log
+*.bak
+
+*.uvoptx
+*.uvguix.*
+*.uvoptx.bak
+*.uvprojx.user*
+*.uvprojx

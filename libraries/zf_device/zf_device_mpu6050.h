@@ -57,10 +57,10 @@
 
 #include "zf_common_typedef.h"
 
-#define MPU6050_USE_SOFT_IIC        ( 1 )                                       // 默认使用软件 IIC 方式驱动 建议使用软件 IIC 方式
+#define MPU6050_USE_SOFT_IIC        ( 0 )                                       // 默认使用软件 IIC 方式驱动 建议使用软件 IIC 方式
 #if MPU6050_USE_SOFT_IIC                                                        // 这两段 颜色正常的才是正确的 颜色灰的就是没有用的
 //====================================================软件 IIC 驱动====================================================
-#define MPU6050_SOFT_IIC_DELAY      ( 10  )                                     // 软件 IIC 的时钟延时周期 数值越小 IIC 通信速率越快
+#define MPU6050_SOFT_IIC_DELAY      ( 10 )                                     // 软件 IIC 的时钟延时周期 数值越小 IIC 通信速率越快
 #define MPU6050_SCL_PIN             ( B13 )                                     // 软件 IIC SCL 引脚 连接 MPU6050 的 SCL 引脚
 #define MPU6050_SDA_PIN             ( B15 )                                     // 软件 IIC SDA 引脚 连接 MPU6050 的 SDA 引脚
 //====================================================软件 IIC 驱动====================================================
@@ -121,5 +121,6 @@ void    mpu6050_get_gyro            (void);
 float   mpu6050_acc_transition      (int16 acc_value);                          // 将 MPU6050 加速度计数据转换为实际物理数据
 float   mpu6050_gyro_transition     (int16 gyro_value);                         // 将 MPU6050 陀螺仪数据转换为实际物理数据
 uint8   mpu6050_init                (void);
+uint8   mpu6050_read_who_am_i       (void);
 
 #endif

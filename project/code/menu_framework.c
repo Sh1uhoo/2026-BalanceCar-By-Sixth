@@ -87,17 +87,21 @@ Menu_Item *MNormal_Next(Menu_States *self, int input) {
     if (select >= 0)
       self->select_index =
           (select - 1 + current->entry_count) % current->entry_count;
+    current->attributes |= MENU_Item_ChangedFlag;
   } else if (input == MENU_Input_SelectDown) {
     if (select >= 0)
       self->select_index = (select + 1) % current->entry_count;
+    current->attributes |= MENU_Item_ChangedFlag;
   }
   return NULL;
 }
 void MChange_Next(Menu_States *self, int input) {
   Menu_Item *cursel = &self->current->entries[self->select_index];
-  if (input == MENU_Input_Exit)
+  if (input == MENU_Input_Exit) {
     self->cur_mode = MENU_Mode_Normal;
-  else if (cursel->fn_proc_input)
+    if (cursel->fn_on_exit)
+      cursel->fn_on_exit(cursel->userp);
+  } else if (cursel->fn_proc_input)
     cursel->fn_proc_input(input, cursel->userp);
 }
 
@@ -106,11 +110,12 @@ void Menu_OLED_WriteText(Menu_States *self) {
   OLED_Clear();
   uint8_t line = 0;
   if (!(current->attributes & MENU_Item_NoTitle)) {
-    OLED_ShowString(line, 0, (char *)current->name);
+    // 行数从1计数，但旧代码使用0开始
+    OLED_ShowString(line + 1, 1, (char *)current->name);
     const char *mode_str = "[N]";
     if (self->cur_mode == MENU_Mode_Change)
       mode_str = "[C]";
-    OLED_ShowString(line, 13, (char *)mode_str);
+    OLED_ShowString(line + 1, 14, (char *)mode_str);
     line++;
   }
   int i, endi;
@@ -126,12 +131,12 @@ void Menu_OLED_WriteText(Menu_States *self) {
     return;
   for (Menu_Item *cur; i < endi; ++i) {
     cur = &current->entries[i];
-    OLED_ShowString(line, 1, (char *)cur->name);
+    OLED_ShowString(line + 1, 2, (char *)cur->name);
     int end = strlen(cur->name);
     if (i == self->select_index)
-      OLED_ShowString(line, 0, (char *)">");
+      OLED_ShowChar(line + 1, 1, '>');
     if (cur->fn_on_put)
-      cur->fn_on_put(line, end, cur->userp);
+      cur->fn_on_put(line + 1, end + 1, cur->userp);
     line++;
   }
 }

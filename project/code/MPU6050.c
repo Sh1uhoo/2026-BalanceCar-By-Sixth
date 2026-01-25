@@ -45,14 +45,21 @@ void Check_Init(check *ch)
 void MPU6050_Check(check *ch)
 {
 	Check_Init(ch);
-	system_delay_ms(100);
+	for(int i=0;i<100;i++)
+	{
 	mpu6050_get_acc();
 	mpu6050_get_gyro();
-	ch->AX_0 = mpu6050_acc_transition(mpu6050_acc_x);
-	ch->AY_0 = mpu6050_acc_transition(mpu6050_acc_y);
-	ch->AZ_0 = mpu6050_acc_transition(mpu6050_acc_z);
-	ch->GX_0 = mpu6050_gyro_transition(mpu6050_gyro_x); 
-	ch->GY_0 = mpu6050_gyro_transition(mpu6050_gyro_y);
-	ch->GZ_0 = mpu6050_gyro_transition(mpu6050_gyro_z);
-	
+	ch->AX_0 += mpu6050_acc_transition(mpu6050_acc_x);
+	ch->AY_0 += mpu6050_acc_transition(mpu6050_acc_y);
+	ch->AZ_0 += mpu6050_acc_transition(mpu6050_acc_z);
+	ch->GX_0 += mpu6050_gyro_transition(mpu6050_gyro_x); 
+	ch->GY_0 += mpu6050_gyro_transition(mpu6050_gyro_y);
+	ch->GZ_0 += mpu6050_gyro_transition(mpu6050_gyro_z);
+	}
+	ch->AX_0 /=100;
+	ch->AY_0 /=100;
+	ch->AZ_0 /=100;
+	ch->GX_0 /=100;
+	ch->GY_0 /=100;
+	ch->GZ_0 /=100;
 }

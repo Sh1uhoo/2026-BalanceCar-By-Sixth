@@ -9,24 +9,50 @@ uint8_t MPU6050_Init(void)
 
 
 // MPU6500的配置：在 zf_device_mpu6050.h 文件 MPU6050_ACC_SAMPLE(102)  MPU6050_GYR_SAMPLE(108)  中查看
-void MPU6050_GetData_Acc(acc_xyz_value *Acc)
+void MPU6050_GetData_Acc(acc_xyz_value *Acc,check *ch)
 {
 	mpu6050_get_acc();
-	Acc->AX=(int16_t)mpu6050_acc_transition(mpu6050_acc_x);//转换为物理数据x轴（float）
-	Acc->AY=(int16_t)mpu6050_acc_transition(mpu6050_acc_y);//转换为物理数据y轴（float）
-	Acc->AZ=(int16_t)mpu6050_acc_transition(mpu6050_acc_z);//转换为物理数据z轴（float）
+	Acc->AX = mpu6050_acc_transition(mpu6050_acc_x)-ch->AX_0;
+	Acc->AY = mpu6050_acc_transition(mpu6050_acc_y)-ch->AY_0;
+	Acc->AZ = mpu6050_acc_transition(mpu6050_acc_z)-(ch->AZ_0-1);
 }
 
-void MPU6050_GetData_Gyro(gyro_xyz_value *Gyro)
+void MPU6050_GetData_Gyro(gyro_xyz_value *Gyro,check *ch)
 {
 	mpu6050_get_gyro();
-	Gyro->GX=(int16_t)mpu6050_gyro_transition(mpu6050_gyro_x);//转换为物理数据x（float）
-	Gyro->GY=(int16_t)mpu6050_gyro_transition(mpu6050_gyro_y);//转换为物理数据y（float）
-	Gyro->GZ=(int16_t)mpu6050_gyro_transition(mpu6050_gyro_z);//转换为物理数据z（float）
+	Gyro->GX = mpu6050_gyro_transition(mpu6050_gyro_x)-ch->GX_0;
+	Gyro->GY = mpu6050_gyro_transition(mpu6050_gyro_y)-ch->GY_0;
+	Gyro->GZ = mpu6050_gyro_transition(mpu6050_gyro_z)-ch->GZ_0;
 }
 
-void MPU6050_GetData(acc_xyz_value *Acc,gyro_xyz_value *Gyro)
+void MPU6050_GetData(acc_xyz_value *Acc,gyro_xyz_value *Gyro,check *ch)
 {
-	MPU6050_GetData_Acc(Acc);
-	MPU6050_GetData_Gyro(Gyro);
+	MPU6050_GetData_Acc(Acc,ch);
+	MPU6050_GetData_Gyro(Gyro,ch);
+}
+
+void Check_Init(check *ch)
+{
+    if (ch == NULL) return;
+    ch->AX_0 = 0.0f;
+    ch->AY_0 = 0.0f;
+    ch->AZ_0 = 0.0f;
+    ch->GX_0 = 0.0f;
+	ch->GY_0 = 0.0f;
+	ch->GZ_0 = 0.0f;
+}
+
+void MPU6050_Check(check *ch)
+{
+	Check_Init(ch);
+	system_delay_ms(100);
+	mpu6050_get_acc();
+	mpu6050_get_gyro();
+	ch->AX_0 = mpu6050_acc_transition(mpu6050_acc_x);
+	ch->AY_0 = mpu6050_acc_transition(mpu6050_acc_y);
+	ch->AZ_0 = mpu6050_acc_transition(mpu6050_acc_z);
+	ch->GX_0 = mpu6050_gyro_transition(mpu6050_gyro_x); 
+	ch->GY_0 = mpu6050_gyro_transition(mpu6050_gyro_y);
+	ch->GZ_0 = mpu6050_gyro_transition(mpu6050_gyro_z);
+	
 }

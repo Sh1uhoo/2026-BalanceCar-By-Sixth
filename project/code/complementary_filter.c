@@ -14,7 +14,7 @@ void CF_Init(ComplementaryFilter_t *filter, float alpha, float dt)
     filter->roll = 0.0f;
     filter->pitch = 0.0f;
     filter->yaw = 0.0f;
-    filter->alpha = alpha;      // 加速度计权重，通常设置为0.02-0.1
+    filter->alpha = alpha;      // 加速度计权重
     filter->dt = dt;            // 采样周期
 }
 
@@ -73,8 +73,8 @@ float CF_NormalizeAngle(float angle)
  * 通过加权融合两者获得更稳定的姿态估计
  * 
  * @param filter 滤波器指针
- * @param ax, ay, az 加速度计原始数据
- * @param gx, gy, gz 陀螺仪原始数据（单位：度/秒）
+ * @param ax, ay, az 加速度计原始数据（m/s^2）
+ * @param gx, gy, gz 陀螺仪原始数据（度/秒）
  */
 void CF_Update(ComplementaryFilter_t *filter, 
                float ax, float ay, float az,
@@ -87,19 +87,28 @@ void CF_Update(ComplementaryFilter_t *filter,
     // 1. 从加速度计计算Roll和Pitch
     CF_GetAccAngle(ax, ay, az, &acc_roll, &acc_pitch);
     
-    // 2. 陀螺仪积分获得角速度变化
-    float gyro_roll = filter->roll + gx * filter->dt;
-    float gyro_pitch = filter->pitch + gy * filter->dt;
-    float gyro_yaw = filter->yaw + gz * filter->dt;
+//    // 2. 陀螺仪零偏补偿（可选，如需要可在标定时设置）
+//	float gyro_x_corrected = gx - filter->gyro_bias_x;
+//	float gyro_y_corrected = gy - filter->gyro_bias_y;
+//	float gyro_z_corrected = gz - filter->gyro_bias_z;
     
-    // 3. 互补滤波融合
-    // 加速度计权重为alpha，陀螺仪权重为(1-alpha)
-    // alpha值越大，加速度计的影响越大；alpha值越小，陀螺仪的影响越大
-    filter->roll = (1.0f - filter->alpha) * gyro_roll + filter->alpha * acc_roll;
-    filter->pitch = (1.0f - filter->alpha) * gyro_pitch + filter->alpha * acc_pitch;
-    filter->yaw = gyro_yaw;  // Yaw只使用陀螺仪，因为加速度计无法获得Yaw信息
+    // 3. 陀螺仪积分获得增量（先进行归一化积分）
+    // 使用更新前的值进行积分（保持连续性）
+    float delta_roll = gx * filter->dt;
+    float delta_pitch = gy * filter->dt;
+    float delta_yaw = gz * filter->dt;
     
-    // 4. 角度标准化（防止角度漂移过大）
+    // 4. 互补滤波融合
+    // 推荐的融合方式：加速度计用于纠正陀螺仪漂移，陀螺仪提供快速响应
+    // Roll: 大部分来自陀螺仪积分（响应快），小部分从加速度计纠正（抗漂移）
+    // Pitch: 同Roll原理
+    // Yaw: 仅陀螺仪（加速度计无法获得Yaw）
+    
+    filter->roll = (1.0f - filter->alpha) * (filter->roll + delta_roll) + filter->alpha * acc_roll;
+    filter->pitch = (1.0f - filter->alpha) * (filter->pitch + delta_pitch) + filter->alpha * acc_pitch;
+    filter->yaw = filter->yaw + delta_yaw;  // Yaw只使用陀螺仪，因为加速度计无法获得Yaw信息
+    
+    // 5. 角度标准化（防止角度漂移过大）
     filter->roll = CF_NormalizeAngle(filter->roll);
     filter->pitch = CF_NormalizeAngle(filter->pitch);
     filter->yaw = CF_NormalizeAngle(filter->yaw);

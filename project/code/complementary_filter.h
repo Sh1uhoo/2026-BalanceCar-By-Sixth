@@ -10,9 +10,9 @@
 
 // 互补滤波器结构体
 typedef struct {
-    int16_t roll;           // 滚转角（围绕X轴）
-    int16_t pitch;          // 俯仰角（围绕Y轴）
-    int16_t yaw;            // 偏航角（围绕Z轴）
+    float roll;           // 滚转角（围绕X轴）
+    float pitch;          // 俯仰角（围绕Y轴）
+    float yaw;            // 偏航角（围绕Z轴）
     float alpha;          // 滤波系数（加速度计权重）
     float dt;             // 时间步长（秒）
 } ComplementaryFilter_t;

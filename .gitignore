@@ -20,3 +20,6 @@ Listings/
 *.uvoptx.bak
 *.uvprojx.user*
 *.uvprojx
+
+# 配置文件
+.clangd

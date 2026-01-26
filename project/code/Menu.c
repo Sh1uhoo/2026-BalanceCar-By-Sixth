@@ -68,6 +68,7 @@ menu_info info[] = {
         {sys.Pos,3,"Pos PID",2,{-1,-1,-1}}
 }; //{头地址，子菜单数，名字，pre地址，next地址数组}
 
+
 item *p;
 menu_info *pi;
 uint8_t piju;
@@ -296,4 +297,30 @@ void Menu_Loop(void)
         }
 }
 
-	
+struct pid
+{
+    int kp;
+    int ki;
+    int kd;
+    int pre_error;
+};
+
+void Menu_Getpid(struct pid *PID_Bal, struct pid *PID_Vel, struct pid *PID_Dir, struct pid *PID_Pos)
+{
+    PID_Bal->kp = sys.Bal[0].data;
+    PID_Bal->ki = sys.Bal[1].data;
+    PID_Bal->kd = sys.Bal[2].data;
+
+    PID_Vel->kp = sys.Vel[0].data;
+    PID_Vel->ki = sys.Vel[1].data;
+    PID_Vel->kd = sys.Vel[2].data;
+
+    PID_Dir->kp = sys.Dir[0].data;
+    PID_Dir->ki = sys.Dir[1].data;
+    PID_Dir->kd = sys.Dir[2].data;
+
+    PID_Pos->kp = sys.Pos[0].data;
+    PID_Pos->ki = sys.Pos[1].data;
+    PID_Pos->kd = sys.Pos[2].data;
+}
+

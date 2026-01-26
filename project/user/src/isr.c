@@ -1,4 +1,5 @@
 #include "isr.h"
+#include "Control.h"
 
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     TIM1 的定时器更新中断服务函数 启动 .s 文件定义 不允许修改函数名称
@@ -64,10 +65,29 @@ void TIM5_IRQHandler (void)
 // 函数简介     TIM6 的定时器中断服务函数 启动 .s 文件定义 不允许修改函数名称
 //              默认优先级 修改优先级使用 interrupt_set_priority(TIM6_IRQn, 1);
 //-------------------------------------------------------------------------------------------------------------------
+int time=0;
+
 void TIM6_IRQHandler (void)
 {
-	extern void pit_handler (void);
-    pit_handler();
+	
+    time++;
+	
+    if (time % 5 == 0)
+    {
+        Control_Bal();
+    }
+    if (time % 10 == 0)
+    {
+        Control_Vel();
+    }
+    if (time % 15 == 0)
+    {
+        Control_Dir();
+    }
+    if (time == 30)
+    {
+        time = 0;
+    }
     TIM6->SR &= ~TIM6->SR;                                                      // 清空中断状态
 }
 

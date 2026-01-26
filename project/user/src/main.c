@@ -17,9 +17,7 @@ int main(void)
 	pit_ms_init(TIM6_PIT, 1);                  
 	interrupt_set_priority(TIM6_IRQn, 1);
 	MPU6050_Init();
-	MPU6050_Init();
 	CF_Init();
-
 	
 	gpio_init(D3, GPI, GPIO_HIGH, GPI_FLOATING_IN);
 	
@@ -28,7 +26,7 @@ int main(void)
 		if (!gpio_get_level(D3))
 		{
 			Menu_Update();
-			system_delay_ms(20);
+			system_delay_ms(10);
 		}
 		else 
 		{

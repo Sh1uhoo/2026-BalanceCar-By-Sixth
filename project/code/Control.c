@@ -1,25 +1,17 @@
 #include "zf_common_headfile.h"
 #include "Control.h"
-#include "Menu.h"
+#include "menu_data.h"
 #include "MPU6050.h"
 #include "Motor.h"
 #include "complementary_filter.h"
 
 ComplementaryFilter_t IMU;
 
-struct pid
-{
-    int kp;
-    int ki;
-    int kd;
-} PID_Bal, PID_Vel, PID_Dir, PID_Pos;
-
 int AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
 
 
 void Control_Bal(void)
 {
-	PID_Bal.kp=1;
 	
     MPU6050_GetData();
     IMU = CF_Update();
@@ -33,7 +25,7 @@ void Control_Bal(void)
     Err0 = Target - Actual;
     ErrInt += Err0;
 
-    AveOut = PID_Bal.kp * Err0 + PID_Bal.ki * ErrInt + PID_Bal.kd * (Err0 - Err1);
+    AveOut = bal_pid_data.kp * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1);
 
     Motor_Setspeed(AveOut + DifOut, 0);
     Motor_Setspeed(AveOut - DifOut, 1);
@@ -50,7 +42,7 @@ void Control_Vel(void)
     Err0 = VelTarget - Actual;
     ErrInt += Err0;
 
-    Out = PID_Vel.kp * Err0 + PID_Vel.ki * ErrInt + PID_Vel.kd * (Err0 - Err1);
+    Out = vel_pid_data.kp * Err0 + vel_pid_data.ki * ErrInt + vel_pid_data.kd * (Err0 - Err1);
 }
 
 void Control_Dir(void)
@@ -62,7 +54,7 @@ void Control_Dir(void)
     Err0 = DirTarget - Actual;
     ErrInt += Err0;
 
-    DifOut = PID_Dir.kp * Err0 + PID_Dir.ki * ErrInt + PID_Dir.kd * (Err0 - Err1);
+    DifOut = dir_pid_data.kp * Err0 + dir_pid_data.ki * ErrInt + dir_pid_data.kd * (Err0 - Err1);
 }
 
 void Control_Target(int x, int y)

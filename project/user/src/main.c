@@ -1,6 +1,7 @@
+#include "Key.h"
+#include "menu_data.h"
 #include "zf_common_headfile.h"
 #include "Motor.h"
-#include "Menu.h"
 #include "MPU6050.h"
 #include "sensor.h"
 #include "complementary_filter.h"
@@ -12,7 +13,7 @@ int main(void)
     debug_init();                                         // 初始化默认 Debug UART
 	
 	Motor_Init(); 
-	Menu_Init();
+	Menu_Start();
 	pit_ms_init(TIM6_PIT, 1);                  
 	interrupt_set_priority(TIM6_IRQn, 1);
 	MPU6050_Init();
@@ -26,7 +27,7 @@ int main(void)
     {	
 		if (!gpio_get_level(D3))
 		{
-			Menu_Loop();
+			Menu_Update();
 			system_delay_ms(20);
 		}
 		else 

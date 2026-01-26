@@ -97,7 +97,7 @@ float CF_NormalizeAngle(float angle)
  * @param ax, ay, az 加速度计原始数据（m/s^2）
  * @param gx, gy, gz 陀螺仪原始数据（度/秒）
  */
-void CF_Update()
+ComplementaryFilter_t CF_Update()
 {
     
     float acc_roll, acc_pitch;
@@ -130,4 +130,6 @@ void CF_Update()
     cf_filter.roll = CF_NormalizeAngle(cf_filter.roll);
     cf_filter.pitch = CF_NormalizeAngle(cf_filter.pitch);
     cf_filter.yaw = CF_NormalizeAngle(cf_filter.yaw);
+
+    return  cf_filter;
 }

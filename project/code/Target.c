@@ -8,6 +8,7 @@ void Target(void)
     {
         Control_Target(0, 0);
     }
+    /*
     else if ()
     {
         
@@ -20,4 +21,5 @@ void Target(void)
     {
 
     }
+    */
 }

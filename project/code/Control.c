@@ -3,13 +3,9 @@
 #include "Menu.h"
 #include "MPU6050.h"
 #include "Motor.h"
+#include "complementary_filter.h"
 
-struct
-{
-    int16_t Pitch;
-    int16_t Roll;
-    int16_t Yaw;
-} IMU;
+ComplementaryFilter_t IMU;
 
 struct pid
 {
@@ -20,15 +16,19 @@ struct pid
 
 int AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
 
+
 void Control_Bal(void)
 {
-    //MPU6050
+	PID_Bal.kp=1;
+	
+    MPU6050_GetData();
+    IMU = CF_Update();
     static int ErrInt,Err0,Err1,Actual,Target=0;
 
     AveSpd = (Motor_Get(0) + Motor_Get(1)) / 2;
     DifSpd = Motor_Get(0) - Motor_Get(1);
 
-    Actual = IMU.Pitch;
+    Actual = IMU.pitch;
     Err1 = Err0;
     Err0 = Target - Actual;
     ErrInt += Err0;
@@ -37,6 +37,8 @@ void Control_Bal(void)
 
     Motor_Setspeed(AveOut + DifOut, 0);
     Motor_Setspeed(AveOut - DifOut, 1);
+	
+	printf("%f,%d,%d\n",IMU.pitch,AveSpd,AveOut);
 }
 
 void Control_Vel(void)

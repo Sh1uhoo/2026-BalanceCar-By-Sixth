@@ -15,10 +15,13 @@ int main(void)
 	Menu_Init();
 	pit_ms_init(TIM6_PIT, 1);                  
 	interrupt_set_priority(TIM6_IRQn, 1);
+	MPU6050_Init();
+	MPU6050_Init();
+	CF_Init();
+
 	
 	gpio_init(D3, GPI, GPIO_HIGH, GPI_FLOATING_IN);
 	
-	uint8_t k=MPU6050_Init();
     while(1)
     {	
 		if (!gpio_get_level(D3))

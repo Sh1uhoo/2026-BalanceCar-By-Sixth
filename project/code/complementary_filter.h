@@ -31,7 +31,7 @@ void CF_Init();
  * @param ax, ay, az 加速度计原始数据
  * @param gx, gy, gz 陀螺仪原始数据（单位：度/秒）
  */
-void CF_Update();
+ ComplementaryFilter_t CF_Update();
 
 /**
  * @brief 从加速度计计算Roll和Pitch角

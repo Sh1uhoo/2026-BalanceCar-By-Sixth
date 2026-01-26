@@ -26,10 +26,10 @@ typedef struct {
 } check;
 
 uint8_t MPU6050_Init(void);
-void MPU6050_GetData_Acc(acc_xyz_value *Acc,check *ch);
-void MPU6050_GetData_Gyro(gyro_xyz_value *Gyro,check *ch);
-void MPU6050_GetData(acc_xyz_value *Acc,gyro_xyz_value *Gyro,check *ch);
-void Check_Init(check *ch);
-void MPU6050_Check(check *ch);
+void MPU6050_GetData_Acc();
+void MPU6050_GetData_Gyro();
+void MPU6050_GetData();
+void Check_Init();
+void MPU6050_Check();
 
 #endif

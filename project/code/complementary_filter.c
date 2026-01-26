@@ -1,21 +1,42 @@
 #include "complementary_filter.h"
 #include <stddef.h>
 
+// acc结构体（使用float保持精度）
+typedef struct {
+    float AX;
+	float AY;
+	float AZ;
+}acc_xyz_value;
+
+// gyro结构体（使用float保持精度）
+typedef struct {
+    float GX;
+	float GY;
+	float GZ;
+}gyro_xyz_value;
+
+extern acc_xyz_value Acc_value;
+extern gyro_xyz_value Gyro_value;
+
+// 互补滤波器
+ComplementaryFilter_t cf_filter;
+float roll, pitch, yaw;                   // 融合后的欧拉角（使用float保持精度）
+const float CF_ALPHA = 0.1f;             // 加速度计权重，建议0.10-0.20（更大权重抵抗陀螺仪漂移）
+const float CF_DT = 0.01f;                // 采样周期（秒），10ms
+
 /**
  * @brief 初始化互补滤波器
  * @param filter 滤波器指针
  * @param alpha 加速度计权重 (0.0-1.0, 建议0.02-0.1)
  * @param dt 时间步长（秒），例如0.01表示10ms
  */
-void CF_Init(ComplementaryFilter_t *filter, float alpha, float dt)
-{
-    if (filter == NULL) return;
-    
-    filter->roll = 0.0f;
-    filter->pitch = 0.0f;
-    filter->yaw = 0.0f;
-    filter->alpha = alpha;      // 加速度计权重
-    filter->dt = dt;            // 采样周期
+void CF_Init()
+{   
+    cf_filter.roll = 0.0f;
+    cf_filter.pitch = 0.0f;
+    cf_filter.yaw = 0.0f;
+    cf_filter.alpha = CF_ALPHA;      // 加速度计权重
+    cf_filter.dt = CF_DT;            // 采样周期
 }
 
 /**
@@ -76,16 +97,13 @@ float CF_NormalizeAngle(float angle)
  * @param ax, ay, az 加速度计原始数据（m/s^2）
  * @param gx, gy, gz 陀螺仪原始数据（度/秒）
  */
-void CF_Update(ComplementaryFilter_t *filter, 
-               float ax, float ay, float az,
-               float gx, float gy, float gz)
+void CF_Update()
 {
-    if (filter == NULL) return;
     
     float acc_roll, acc_pitch;
     
     // 1. 从加速度计计算Roll和Pitch
-    CF_GetAccAngle(ax, ay, az, &acc_roll, &acc_pitch);
+    CF_GetAccAngle(Acc_value.AX, Acc_value.AY, Acc_value.AZ, &acc_roll, &acc_pitch);
     
 //    // 2. 陀螺仪零偏补偿（可选，如需要可在标定时设置）
 //	float gyro_x_corrected = gx - filter->gyro_bias_x;
@@ -94,9 +112,9 @@ void CF_Update(ComplementaryFilter_t *filter,
     
     // 3. 陀螺仪积分获得增量（先进行归一化积分）
     // 使用更新前的值进行积分（保持连续性）
-    float delta_roll = gx * filter->dt;
-    float delta_pitch = gy * filter->dt;
-    float delta_yaw = gz * filter->dt;
+    float delta_roll = Gyro_value.GX * cf_filter.dt;
+    float delta_pitch = Gyro_value.GY * cf_filter.dt;
+    float delta_yaw = Gyro_value.GZ * cf_filter.dt;
     
     // 4. 互补滤波融合
     // 推荐的融合方式：加速度计用于纠正陀螺仪漂移，陀螺仪提供快速响应
@@ -104,12 +122,12 @@ void CF_Update(ComplementaryFilter_t *filter,
     // Pitch: 同Roll原理
     // Yaw: 仅陀螺仪（加速度计无法获得Yaw）
     
-    filter->roll = (1.0f - filter->alpha) * (filter->roll + delta_roll) + filter->alpha * acc_roll;
-    filter->pitch = (1.0f - filter->alpha) * (filter->pitch + delta_pitch) + filter->alpha * acc_pitch;
-    filter->yaw = filter->yaw + delta_yaw;  // Yaw只使用陀螺仪，因为加速度计无法获得Yaw信息
+    cf_filter.roll = (1.0f - cf_filter.alpha) * (cf_filter.roll + delta_roll) + cf_filter.alpha * acc_roll;
+    cf_filter.pitch = (1.0f - cf_filter.alpha) * (cf_filter.pitch + delta_pitch) + cf_filter.alpha * acc_pitch;
+    cf_filter.yaw = cf_filter.yaw + delta_yaw;  // Yaw只使用陀螺仪，因为加速度计无法获得Yaw信息
     
     // 5. 角度标准化（防止角度漂移过大）
-    filter->roll = CF_NormalizeAngle(filter->roll);
-    filter->pitch = CF_NormalizeAngle(filter->pitch);
-    filter->yaw = CF_NormalizeAngle(filter->yaw);
+    cf_filter.roll = CF_NormalizeAngle(cf_filter.roll);
+    cf_filter.pitch = CF_NormalizeAngle(cf_filter.pitch);
+    cf_filter.yaw = CF_NormalizeAngle(cf_filter.yaw);
 }

@@ -23,7 +23,7 @@ typedef struct {
  * @param alpha 加速度计权重 (0.0-1.0, 建议0.02-0.1)
  * @param dt 时间步长（秒），例如0.01表示10ms
  */
-void CF_Init(ComplementaryFilter_t *filter, float alpha, float dt);
+void CF_Init();
 
 /**
  * @brief 更新互补滤波器
@@ -31,9 +31,7 @@ void CF_Init(ComplementaryFilter_t *filter, float alpha, float dt);
  * @param ax, ay, az 加速度计原始数据
  * @param gx, gy, gz 陀螺仪原始数据（单位：度/秒）
  */
-void CF_Update(ComplementaryFilter_t *filter, 
-               float ax, float ay, float az,
-               float gx, float gy, float gz);
+void CF_Update();
 
 /**
  * @brief 从加速度计计算Roll和Pitch角

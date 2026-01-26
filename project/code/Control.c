@@ -20,17 +20,31 @@ void Control_Bal(void)
     AveSpd = (Motor_Get(0) + Motor_Get(1)) / 2;
     DifSpd = Motor_Get(0) - Motor_Get(1);
 
-    Actual = IMU.pitch;
+    Actual = IMU.roll * 100;
     Err1 = Err0;
     Err0 = Target - Actual;
     ErrInt += Err0;
 
-    AveOut = bal_pid_data.kp * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1);
+    AveOut = (bal_pid_data.kp * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1))/10;
 
-    Motor_Setspeed(AveOut + DifOut, 0);
-    Motor_Setspeed(AveOut - DifOut, 1);
+	int pa=AveOut + DifOut,pb=AveOut - DifOut;
+	if (pa>10000) pa=10000;
+	if (pb>10000) pb=10000;
+	if (pa<-10000) pa=-10000;
+	if (pb<-10000) pb=-10000;
 	
-	printf("%f,%d,%d\n",IMU.pitch,AveSpd,AveOut);
+	if (Err0 <30 || Err0 >-30)
+	{
+		Motor_Setspeed(pa, 0);
+		Motor_Setspeed(pb, 1);
+	}
+	else 
+	{
+		Motor_Setspeed(0, 0);
+		Motor_Setspeed(0, 1);
+	}
+	
+	printf("%f\n",IMU.roll);
 }
 
 void Control_Vel(void)

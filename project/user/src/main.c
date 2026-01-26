@@ -14,7 +14,6 @@ int pit_state = 0;
 int main(void) {
   clock_init(SYSTEM_CLOCK_120M); // 初始化芯片时钟 工作频率为 120MHz
   debug_init();                  // 初始化默认 Debug UART
-	Key_Init();
   Menu_Start();
 	
 	pit_ms_init(PIT, 10);

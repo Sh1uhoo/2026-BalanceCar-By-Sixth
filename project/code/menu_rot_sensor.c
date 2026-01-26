@@ -25,4 +25,11 @@ void Menu_RotReset() {
     e->middle_value = e->actual_value;
   }
 }
+void Menu_RotResetCurrent() {
+  RotEntry *e;
+  for (int i = 0; i < MENU_ROT_NUM; ++i) {
+    e = menu_channels + i;
+    e->middle_value = e->actual_value;
+  }
+}
 int16_t Menu_RotGetDelta(uint8_t pos) { return menu_channels[pos].delta_value; }

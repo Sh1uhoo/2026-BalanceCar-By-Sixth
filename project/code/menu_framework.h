@@ -1,7 +1,8 @@
 #ifndef MENU_MODU_H_FILE_
 #define MENU_MODU_H_FILE_
-#include <stdint.h>
+#include "display/oled_text_ui.h"
 #include "zf_common_headfile.h"
+#include <stdint.h>
 
 #define MENU_STACK_MAX 6
 enum {
@@ -23,6 +24,7 @@ enum {
   MENU_Input_Exit = 'H',
   MENU_Input_SelectUp = 'K',
   MENU_Input_SelectDown = 'J',
+  MENU_Input_ResetToZero = 'Z',
   MENU_Input_Increase = '+',
   MENU_Input_FastIncrease = 'I',
   MENU_Input_Decrease = '-',
@@ -43,11 +45,11 @@ struct Menu_Item_St {
 
   // 在进入菜单选项时调用
   // 返回选项进入后所在的模式，MENU_Mode_Exit表示不可进入
-  int (*fn_on_entry)(void * userp);
+  int (*fn_on_entry)(void *userp);
   // 在退出菜单选项时调用
-  void (*fn_on_exit)(void * userp);
+  void (*fn_on_exit)(void *userp);
   // 选项处理输入调用
-  void (*fn_proc_input)(int input, void * userp);
+  void (*fn_proc_input)(int input, void *userp);
   // 在向OLED上输出时调用, 仅对只显示一个数据条目的有用
   void (*fn_on_put)(uint8_t line, uint8_t offset, void *userp);
   // 在ChangeMode下，选项处理输入时调用，不能为空，除非上级菜单选项有处理函数
@@ -64,6 +66,8 @@ struct Menu_States_St {
   Menu_Item *ptr_stack[MENU_STACK_MAX];
   int16_t ind_stack[MENU_STACK_MAX];
   int32_t stack_top;
+
+  OLED_Text_Handle *handle;
 };
 typedef struct Menu_States_St Menu_States;
 // 切换到以top为初始的菜单
@@ -73,4 +77,5 @@ void Menu_Switch(Menu_States *self, Menu_Item *top);
 void Menu_Proc(Menu_States *self);
 
 void Menu_OLED_WriteText(Menu_States *self);
+void Menu_OLED_Put(Menu_States *self);
 #endif // !MENU_MODU_H_FILE_

@@ -15,6 +15,7 @@ extern RotEntry menu_channels[MENU_ROT_NUM];
 void Menu_RotInit();
 void Menu_RotGet();
 void Menu_RotReset();
+void Menu_RotResetCurrent();
 int16_t Menu_RotGetDelta(uint8_t pos);
 
 #endif // !MENU_ROT_SENSOR_H_

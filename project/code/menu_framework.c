@@ -1,5 +1,4 @@
 #include "menu_framework.h"
-#include "OLED.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -45,7 +44,7 @@ void Menu_Proc(Menu_States *self) {
     if (CheckChangeAndClear(&current->entries[i]))
       changed = 1;
   if (changed)
-    Menu_OLED_WriteText(self);
+    Menu_OLED_WriteText(self), Menu_OLED_Put(self);
 }
 void Next(Menu_States *self, int input) {
   Menu_Item *next;
@@ -105,23 +104,26 @@ void MChange_Next(Menu_States *self, int input) {
     cursel->fn_proc_input(input, cursel->userp);
 }
 
-void Menu_OLED_WriteText(Menu_States *self) {
-  Menu_Item *current = self->current;
-  OLED_Clear();
+void Menu_OLED_WriteText(Menu_States *this) {
+  OLED_Text_Handle *hnd = this->handle;
+  Menu_Item *current = this->current;
+  OLED_Text_Fill(hnd, ' ', STY_NONE);
   uint8_t line = 0;
-  if (!(current->attributes & MENU_Item_NoTitle)) {
-    // 行数从1计数，但旧代码使用0开始
-    OLED_ShowString(line + 1, 1, (char *)current->name);
-    const char *mode_str = "[N]";
-    if (self->cur_mode == MENU_Mode_Change)
-      mode_str = "[C]";
-    OLED_ShowString(line + 1, 14, (char *)mode_str);
+  if (!(current->attributes & MENU_Item_NoTitle) && hnd->height > 1) {
+    OLED_Text_Write2(hnd, line, 0, current->name,
+                     hnd->width - (hnd->width > 8 ? 3 : 0), STY_NONE);
+    if (hnd->width > 8) {
+      const char *mode_str = "[N]";
+      if (this->cur_mode == MENU_Mode_Change)
+        mode_str = "[C]";
+      OLED_Text_Write(hnd, line, hnd->width - 3, mode_str, STY_NONE);
+    }
     line++;
   }
   int i, endi;
-  if (current->entry_count > 4 - line) {
-    i = self->select_index > 1 ? self->select_index : 0;
-    endi = i + (4 - line);
+  if (current->entry_count > (hnd->height - line)) {
+    i = this->select_index > 1 ? this->select_index : 0;
+    endi = i + (hnd->height - line);
     if (endi > current->entry_count)
       endi = current->entry_count;
   } else if (current->entry_count > 0) {
@@ -131,12 +133,17 @@ void Menu_OLED_WriteText(Menu_States *self) {
     return;
   for (Menu_Item *cur; i < endi; ++i) {
     cur = &current->entries[i];
-    OLED_ShowString(line + 1, 2, (char *)cur->name);
-    int end = strlen(cur->name);
-    if (i == self->select_index)
-      OLED_ShowChar(line + 1, 1, '>');
+    int end = OLED_Text_WriteText(hnd, line, 1, cur->name);
+    if (i == this->select_index) {
+      OLED_Text_WriteText(hnd, line, 0, ">");
+      OLED_Text_WriteStyle(hnd, line, 0, STY_InverseColor);
+    }
     if (cur->fn_on_put)
-      cur->fn_on_put(line + 1, end + 1, cur->userp);
+      cur->fn_on_put(line, end, cur->userp);
     line++;
   }
+}
+void Menu_OLED_Put(Menu_States *self) {
+  OLED_Text_Put(self->handle);
+  OLED_Text_SwapBuffer(self->handle);
 }

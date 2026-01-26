@@ -2,7 +2,7 @@
 #define MENU_DATA_H_
 #include "menu_framework.h"
 
-
+extern OLED_Text_Handle* oled_text_hnd;
 struct PidData {
   int kp, ki, kd;
 };

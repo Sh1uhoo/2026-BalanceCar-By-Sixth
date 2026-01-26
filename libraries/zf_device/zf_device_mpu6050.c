@@ -208,7 +208,7 @@ uint8 mpu6050_init (void)
         }
         mpu6050_write_register(MPU6050_PWR_MGMT_1, 0x00);                       // 解除休眠状态
         mpu6050_write_register(MPU6050_SMPLRT_DIV, 0x07);                       // 125HZ采样率
-        mpu6050_write_register(MPU6050_CONFIG, 0x04);
+        mpu6050_write_register(MPU6050_CONFIG, 0x00);							//低通滤波频率
 
         mpu6050_write_register(MPU6050_GYRO_CONFIG, MPU6050_GYR_SAMPLE);        // 2000
         // GYRO_CONFIG寄存器
@@ -228,4 +228,16 @@ uint8 mpu6050_init (void)
         mpu6050_write_register(MPU6050_INT_PIN_CFG, 0x02);
     }while(0);
     return return_state;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     读取 WHO_AM_I 寄存器
+// 参数说明     void
+// 返回参数     uint8           WHO_AM_I 的值
+// 使用示例     uint8 id = mpu6050_read_who_am_i();
+// 备注信息
+//-------------------------------------------------------------------------------------------------------------------
+uint8 mpu6050_read_who_am_i (void)
+{
+    return mpu6050_read_register(MPU6050_WHO_AM_I);
 }

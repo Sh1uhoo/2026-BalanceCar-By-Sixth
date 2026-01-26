@@ -3,10 +3,8 @@
 #include "Menu.h"
 #include "MPU6050.h"
 #include "sensor.h"
+#include "complementary_filter.h"
 
-int16_t AX, AY, AZ, GX, GY, GZ;			//定义用于存放各个数据的变量
-										// 三轴陀螺仪数据gyro (陀螺仪)
-										// 三轴加速度计数据    acc (accelerometer 加速度计)
 
 int main(void)
 { 

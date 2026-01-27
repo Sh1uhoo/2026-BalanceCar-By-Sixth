@@ -20,17 +20,18 @@ int main(void)
 	CF_Init();
 	
 	gpio_init(D3, GPI, GPIO_HIGH, GPI_FLOATING_IN);
-	
+
     while(1)
     {	
 		if (!gpio_get_level(D3))
 		{
 			Menu_Update();
 			system_delay_ms(10);
+			Motor_Setspeed(0,0);
+			Motor_Setspeed(0,1);
 		}
 		else 
 		{
-			
 		}
 
 

@@ -8,6 +8,7 @@ gyro_xyz_value Gyro_value;				//结构体
 uint8_t MPU6050_Init(void)
 {
 	uint8_t i=mpu6050_init();//初始化I2C，失败返回1
+	MPU6050_Check();
 	return i;
 }
 

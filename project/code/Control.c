@@ -12,7 +12,6 @@ int AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
 
 void Control_Bal(void)
 {
-	
     MPU6050_GetData();
     IMU = CF_Update();
     static int ErrInt,Err0,Err1,Actual,Target=0;
@@ -25,7 +24,10 @@ void Control_Bal(void)
     Err0 = Target - Actual;
     ErrInt += Err0;
 
-    AveOut = (bal_pid_data.kp * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1))/10;
+    if (ErrInt > 10000) ErrInt = 10000;
+    if (ErrInt < -10000) ErrInt = -10000;
+
+    AveOut = ((bal_pid_data.kp / 4 + 40) * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1)+6)/10;
 
 	int pa=AveOut + DifOut,pb=AveOut - DifOut;
 	if (pa>10000) pa=10000;
@@ -33,7 +35,8 @@ void Control_Bal(void)
 	if (pa<-10000) pa=-10000;
 	if (pb<-10000) pb=-10000;
 	
-	if (Err0 <30 || Err0 >-30)
+	
+	if (IMU.roll <30 && IMU.roll >-30)
 	{
 		Motor_Setspeed(pa, 0);
 		Motor_Setspeed(pb, 1);
@@ -44,7 +47,7 @@ void Control_Bal(void)
 		Motor_Setspeed(0, 1);
 	}
 	
-	printf("%f\n",IMU.roll);
+	printf("%f,%d\n",IMU.roll,AveOut);
 }
 
 void Control_Vel(void)

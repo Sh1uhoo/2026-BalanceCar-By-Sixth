@@ -22,7 +22,7 @@ extern gyro_xyz_value Gyro_value;
 ComplementaryFilter_t cf_filter;
 float roll, pitch, yaw;                   // 融合后的欧拉角（使用float保持精度）
 const float CF_ALPHA = 0.1f;             // 加速度计权重，建议0.10-0.20（更大权重抵抗陀螺仪漂移）
-const float CF_DT = 0.01f;                // 采样周期（秒），10ms
+const float CF_DT = 0.005f;                // 采样周期（秒），5ms
 
 /**
  * @brief 初始化互补滤波器

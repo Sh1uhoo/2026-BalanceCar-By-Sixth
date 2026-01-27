@@ -20,8 +20,13 @@ extern gyro_xyz_value Gyro_value;
 
 // 互补滤波器
 ComplementaryFilter_t cf_filter;
+<<<<<<< HEAD
 float roll, pitch, yaw;                   // 融合后的欧拉角（使用float保持精度）
 const float CF_ALPHA = 0.1f;             // 加速度计权重，建议0.10-0.20（更大权重抵抗陀螺仪漂移）
+=======
+float roll, pitch, yaw;                   // 融合后的欧拉角
+const float CF_ALPHA = 0.055f;             // 加速度计权重
+>>>>>>> bc8353cc8a04b2e3a9e90528b01a1207b9bf55b7
 const float CF_DT = 0.005f;                // 采样周期（秒），5ms
 
 /**

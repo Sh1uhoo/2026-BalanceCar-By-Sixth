@@ -90,6 +90,7 @@ void TIM6_IRQHandler (void)
 			time = 0;
 		}
 	}
+	else fall = 0;
     TIM6->SR &= ~TIM6->SR;                                                      // 清空中断状态
 }
 

@@ -8,10 +8,11 @@
 ComplementaryFilter_t IMU;
 
 int AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
-
+int fall=0;
 
 void Control_Bal(void)
 {
+	
     MPU6050_GetData();
     IMU = CF_Update();
     static int ErrInt,Err0,Err1,Actual,Target=0;
@@ -36,7 +37,7 @@ void Control_Bal(void)
 	if (pb<-10000) pb=-10000;
 	
 	
-	if (IMU.roll <20 && IMU.roll >-20)
+	if (IMU.roll <25 && IMU.roll >-25 && !fall)
 	{
 		Motor_Setspeed(pa, 0);
 		Motor_Setspeed(pb, 1);
@@ -52,6 +53,8 @@ void Control_Bal(void)
 		
 		Motor_Setspeed(0,0);
 		Motor_Setspeed(0,1);
+		
+		fall = 1;
 	}
 	
 	printf("%f,%d,%d\n",IMU.roll,pa,pb);

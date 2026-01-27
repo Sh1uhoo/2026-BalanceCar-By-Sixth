@@ -186,18 +186,24 @@ struct PidData *PidGetData(int index) {
 }
 static uint32_t write_to_sector = 126, write_to_page = 0, write_head_value = 0;
 static void PidReadFromFlash() {
-  uint32_t max, headval, headpage, headsector;
+  uint32_t max = 0;
+  uint32_t headval = 0;
+  uint32_t headpage = 0;
+  uint32_t headsector = 126;
   for (uint32_t sector = 126; sector <= 127; ++sector) {
-    for (uint32_t i = 0; i < 4; ++i) {
+    for (uint32_t page = 0; page < 4; ++page) {
       flash_buffer_clear();
-      flash_read_page_to_buffer(126, i);
+      flash_read_page_to_buffer(sector, page);
       headval = flash_union_buffer[0].uint32_type;
-      max = headval > max ? (headpage = i, headsector = sector, headval) : max;
+      if (headval >= max) {
+        max = headval + 1;
+        headpage = page, headsector = sector;
+      }
     }
   }
   write_to_sector = headsector;
   write_to_page = headpage;
-  write_head_value = headval;
+  write_head_value = max;
   flash_buffer_clear();
   flash_read_page_to_buffer(headsector, headpage);
   for (int j = 0; j < 4; ++j) {

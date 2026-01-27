@@ -7,11 +7,12 @@ static float CalculateLineOffset() {
   static const int weight[SENSOR_NUM] = {-4, -1, +1, +4};
   float out = 0.0f;
   for (int i = 0; i < SENSOR_NUM; ++i)
-    out = weight[i] * !!(sensor_value[i] == SENSOR_BLACK);
+    out += weight[i] * !!(sensor_value[i] == SENSOR_BLACK);
+	return out;
 }
 void Track_Init() { Sensor_Init(); }
 
-extern struct PidData track_pid_data;
+struct PidData track_pid_data;
 int track_base_vel = 100;
 
 void Track_Update() {

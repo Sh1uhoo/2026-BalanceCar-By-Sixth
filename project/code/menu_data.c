@@ -1,17 +1,18 @@
 #include "menu_data.h"
-#include "Flash.h"
 #include "Key.h"
-#include "menu_framework.h"
-#include "menu_rot_sensor.h"
 #include "display/oled_ssd1309.h"
 #include "display/oled_text_ui.h"
+#include "menu_framework.h"
+#include "menu_rot_sensor.h"
 #include "zf_common_typedef.h"
 #include "zf_driver_flash.h"
 #include <stdio.h>
+#include <string.h>
 
 #define UNUSED(x) ((void)(x))
 
 OLED_Text_M_MakeHnd(oled_handle, 16, 4, 0, 0);
+OLED_Text_Handle *oled_text_hnd = &oled_handle;
 static int H_CountDigits(int num) {
   int count = 0;
   if (num == 0)
@@ -167,6 +168,8 @@ enum {
   PIDDATA_INDEX_POS = 3
 };
 struct PidData bal_pid_data, vel_pid_data, dir_pid_data, pos_pid_data;
+static struct PidData back_pid_data[4];
+
 struct PidData *PidGetData(int index) {
   switch (index) {
   case PIDDATA_INDEX_BAL:
@@ -181,37 +184,74 @@ struct PidData *PidGetData(int index) {
     return &bal_pid_data; // Not Result In HardFault
   }
 }
+static uint32_t write_to_sector = 126, write_to_page = 0, write_head_value = 0;
 static void PidReadFromFlash() {
-  struct PidData *pd = &bal_pid_data;
-  Flash_Read(PIDDATA_INDEX_BAL);
-  pd->kp = flash_union_buffer[0].int32_type;
-  pd->ki = flash_union_buffer[1].int32_type;
-  pd->kd = flash_union_buffer[2].int32_type;
-
-  pd = &vel_pid_data;
-  Flash_Read(PIDDATA_INDEX_VEL);
-  pd->kp = flash_union_buffer[0].int32_type;
-  pd->ki = flash_union_buffer[1].int32_type;
-  pd->kd = flash_union_buffer[2].int32_type;
-
-  pd = &dir_pid_data;
-  Flash_Read(PIDDATA_INDEX_DIR);
-  pd->kp = flash_union_buffer[0].int32_type;
-  pd->ki = flash_union_buffer[1].int32_type;
-  pd->kd = flash_union_buffer[2].int32_type;
-
-  pd = &pos_pid_data;
-  Flash_Read(PIDDATA_INDEX_POS);
-  pd->kp = flash_union_buffer[0].int32_type;
-  pd->ki = flash_union_buffer[1].int32_type;
-  pd->kd = flash_union_buffer[2].int32_type;
+  uint32_t max = 0;
+  uint32_t headval = 0;
+  uint32_t headpage = 0;
+  uint32_t headsector = 126;
+  for (uint32_t sector = 126; sector <= 127; ++sector) {
+    for (uint32_t page = 0; page < 4; ++page) {
+      flash_buffer_clear();
+      flash_read_page_to_buffer(sector, page);
+      headval = flash_union_buffer[0].uint32_type;
+      if (headval >= max) {
+        max = headval + 1;
+        headpage = page, headsector = sector;
+      }
+    }
+  }
+  write_to_sector = headsector;
+  write_to_page = headpage;
+  write_head_value = max;
+  flash_buffer_clear();
+  flash_read_page_to_buffer(headsector, headpage);
+  for (int j = 0; j < 4; ++j) {
+    back_pid_data[j].kp = flash_union_buffer[1 + j * 3 + 0].int32_type;
+    back_pid_data[j].ki = flash_union_buffer[1 + j * 3 + 1].int32_type;
+    back_pid_data[j].kd = flash_union_buffer[1 + j * 3 + 2].int32_type;
+  }
+  memcpy(&bal_pid_data, back_pid_data + PIDDATA_INDEX_BAL,
+         sizeof(struct PidData));
+  memcpy(&vel_pid_data, back_pid_data + PIDDATA_INDEX_VEL,
+         sizeof(struct PidData));
+  memcpy(&dir_pid_data, back_pid_data + PIDDATA_INDEX_DIR,
+         sizeof(struct PidData));
+  memcpy(&pos_pid_data, back_pid_data + PIDDATA_INDEX_POS,
+         sizeof(struct PidData));
 }
-static void PidWriteToFlash(int index) {
-  struct PidData *pd = PidGetData(index);
-  flash_union_buffer[0].int32_type = pd->kp;
-  flash_union_buffer[1].int32_type = pd->ki;
-  flash_union_buffer[2].int32_type = pd->kd;
-  Flash_Write(index);
+static int ComparePidData(const struct PidData *a, const struct PidData *b) {
+  return a->kp == b->kp && a->ki == b->ki && a->kd == b->kd;
+}
+static void PidWriteToFlash() {
+  if (ComparePidData(&back_pid_data[PIDDATA_INDEX_VEL], &vel_pid_data) &&
+      ComparePidData(&back_pid_data[PIDDATA_INDEX_BAL], &bal_pid_data) &&
+      ComparePidData(&back_pid_data[PIDDATA_INDEX_DIR], &dir_pid_data) &&
+      ComparePidData(&back_pid_data[PIDDATA_INDEX_POS], &pos_pid_data))
+    return;
+  if (write_to_page == 3)
+    write_to_sector = write_to_sector == 127 ? 126 : 127;
+  write_to_page = (write_to_page + 1) % 4;
+  write_head_value += 1;
+  memcpy(back_pid_data + PIDDATA_INDEX_BAL, &bal_pid_data,
+         sizeof(struct PidData));
+  memcpy(back_pid_data + PIDDATA_INDEX_DIR, &dir_pid_data,
+         sizeof(struct PidData));
+  memcpy(back_pid_data + PIDDATA_INDEX_POS, &pos_pid_data,
+         sizeof(struct PidData));
+  memcpy(back_pid_data + PIDDATA_INDEX_VEL, &vel_pid_data,
+         sizeof(struct PidData));
+
+  flash_buffer_clear();
+  flash_union_buffer[0].uint32_type = write_head_value;
+  for (int j = 0; j < 4; ++j) {
+    flash_union_buffer[1 + j * 3 + 0].int32_type = back_pid_data[j].kp;
+    flash_union_buffer[1 + j * 3 + 1].int32_type = back_pid_data[j].ki;
+    flash_union_buffer[1 + j * 3 + 2].int32_type = back_pid_data[j].kd;
+  }
+  if (flash_check(write_to_sector, write_to_page))
+    flash_erase_page(write_to_sector, write_to_page);
+  flash_write_page_from_buffer(write_to_sector, write_to_page);
 }
 
 static void ChangePidVal(int input, void *userp) {
@@ -239,15 +279,8 @@ static void DisplayPidVal(uint8 line, uint8 begin, void *userp) {
                          ' ');
 }
 static void ExitPidEditing(void *userp) {
-  if (userp == &bal_pid_data) {
-    PidWriteToFlash(PIDDATA_INDEX_BAL);
-  } else if (userp == &vel_pid_data) {
-    PidWriteToFlash(PIDDATA_INDEX_VEL);
-  } else if (userp == &dir_pid_data) {
-    PidWriteToFlash(PIDDATA_INDEX_DIR);
-  } else if (userp == &pos_pid_data) {
-    PidWriteToFlash(PIDDATA_INDEX_POS);
-  }
+  UNUSED(userp);
+  PidWriteToFlash();
 }
 extern Menu_Item bal_pid_item_entries[3];
 extern Menu_Item vel_pid_item_entries[3];

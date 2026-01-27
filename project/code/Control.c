@@ -24,10 +24,10 @@ void Control_Bal(void)
     Err0 = Target - Actual;
     ErrInt += Err0;
 
-    if (ErrInt > 10000) ErrInt = 10000;
-    if (ErrInt < -10000) ErrInt = -10000;
+    if (ErrInt > 100000) ErrInt = 100000;
+    if (ErrInt < -100000) ErrInt = -100000;
 
-    AveOut = ((bal_pid_data.kp / 4 + 40) * Err0 + bal_pid_data.ki * ErrInt + bal_pid_data.kd * (Err0 - Err1)+6)/10;
+    AveOut = ((bal_pid_data.kp / 4 + 40) * Err0 + bal_pid_data.ki * ErrInt / 30 + bal_pid_data.kd * (Err0 - Err1) + 6)/10;
 
 	int pa=AveOut + DifOut,pb=AveOut - DifOut;
 	if (pa>10000) pa=10000;
@@ -36,18 +36,25 @@ void Control_Bal(void)
 	if (pb<-10000) pb=-10000;
 	
 	
-	if (IMU.roll <30 && IMU.roll >-30)
+	if (IMU.roll <20 && IMU.roll >-20)
 	{
 		Motor_Setspeed(pa, 0);
 		Motor_Setspeed(pb, 1);
 	}
 	else 
 	{
-		Motor_Setspeed(0, 0);
-		Motor_Setspeed(0, 1);
+		gpio_set_level(A0,GPIO_HIGH);
+		gpio_set_level(B12,GPIO_HIGH);
+		gpio_set_level(A2,GPIO_HIGH);
+		gpio_set_level(B14,GPIO_HIGH);
+		
+		system_delay_ms(20);
+		
+		Motor_Setspeed(0,0);
+		Motor_Setspeed(0,1);
 	}
 	
-	printf("%f,%d\n",IMU.roll,AveOut);
+	printf("%f,%d,%d\n",IMU.roll,pa,pb);
 }
 
 void Control_Vel(void)

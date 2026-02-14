@@ -42,6 +42,7 @@ uint8_t Key_GetState(int n)
 			return 1;
 		return 0;
 	}
+	return 0;
 }
 
 

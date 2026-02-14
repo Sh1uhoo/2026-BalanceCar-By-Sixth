@@ -195,8 +195,11 @@ static void PidReadFromFlash() {
       flash_buffer_clear();
       flash_read_page_to_buffer(sector, page);
       headval = flash_union_buffer[0].uint32_type;
-      if (headval >= max) {
-        max = headval + 1;
+      if (headval == 0xffffffff) continue;
+      // 实际的headval不可能达到42亿，因为按照10000次擦写寿命计算，这个值在寿命
+      // 内最大达到80000 < 4294967296
+      if (headval > max) {
+        max = headval;
         headpage = page, headsector = sector;
       }
     }

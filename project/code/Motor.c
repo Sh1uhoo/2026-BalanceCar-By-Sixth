@@ -14,6 +14,7 @@ pwm_channel_enum channel_list[2] = {TIM5_PWM_CH2_A1, TIM5_PWM_CH4_A3};
 	gpio_init(A2, GPO, GPIO_LOW, GPO_PUSH_PULL);                               // 初始化 MOTOR2_DIR 输出
 	gpio_init(B12, GPO, GPIO_LOW, GPO_PUSH_PULL);                               
 	gpio_init(B14, GPO, GPIO_LOW, GPO_PUSH_PULL);
+	 gpio_init(B9, GPO, GPIO_LOW, GPO_PUSH_PULL);
 
 	pwm_init(TIM5_PWM_CH2_A1, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
     pwm_init(TIM5_PWM_CH4_A3, 17000, 0);

@@ -7,7 +7,7 @@
 
 ComplementaryFilter_t IMU;
 
-int AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
+int S1,S2,AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
 int fall=0;
 
 void Control_Bal(void)
@@ -17,8 +17,11 @@ void Control_Bal(void)
     IMU = CF_Update();
     static int ErrInt,Err0,Err1,Actual,Target=0;
 
-    AveSpd = (Motor_Get(0) + Motor_Get(1)) / 2;
-    DifSpd = Motor_Get(0) - Motor_Get(1);
+	
+	S1 = Motor_Get(0);
+	S2 = Motor_Get(1);
+    AveSpd = (S1 + S2) / 2;
+    DifSpd = S1 - S2;
 
     Actual = IMU.roll * 100;
     Err1 = Err0;
@@ -28,16 +31,24 @@ void Control_Bal(void)
     if (ErrInt > 100000) ErrInt = 100000;
     if (ErrInt < -100000) ErrInt = -100000;
 
-    AveOut = ((bal_pid_data.kp / 4 + 40) * Err0 + bal_pid_data.ki * ErrInt / 30 + bal_pid_data.kd * (Err0 - Err1) + 6)/10;
+    AveOut = ((bal_pid_data.kp * 2) * Err0 + bal_pid_data.ki * ErrInt / 30 + bal_pid_data.kd * (Err0 - Err1) + 6)/10;
 
 	int pa=AveOut + DifOut,pb=AveOut - DifOut;
 	if (pa>10000) pa=10000;
 	if (pb>10000) pb=10000;
 	if (pa<-10000) pa=-10000;
 	if (pb<-10000) pb=-10000;
+
+
+    /*
+	if (pa<1200 && pa>300) pa = 1200;
+	if (pb<1200 && pb>300) pb = 1200;
+	if (pa>-1200 && pa<-300) pa = -1200;
+	if (pb>-1200 && pb<-300) pb = -1200;
+    */
 	
 	
-	if (IMU.roll <25 && IMU.roll >-25 && !fall)
+	if (IMU.roll <30 && IMU.roll >-30 && !fall)
 	{
 		Motor_Setspeed(pa, 0);
 		Motor_Setspeed(pb, 1);
@@ -57,7 +68,7 @@ void Control_Bal(void)
 		fall = 1;
 	}
 	
-	printf("%f,%d,%d\n",IMU.roll,pa,pb);
+	printf("%f,%d,%d\n",IMU.roll,S1,DifOut);
 }
 
 void Control_Vel(void)
@@ -81,7 +92,8 @@ void Control_Dir(void)
     Err0 = DirTarget - Actual;
     ErrInt += Err0;
 
-    DifOut = dir_pid_data.kp * Err0 + dir_pid_data.ki * ErrInt + dir_pid_data.kd * (Err0 - Err1);
+    DifOut = 0;
+	//dir_pid_data.kp * Err0 + dir_pid_data.ki * ErrInt + dir_pid_data.kd * (Err0 - Err1);
 }
 
 void Control_Target(int x, int y)

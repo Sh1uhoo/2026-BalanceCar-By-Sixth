@@ -1,4 +1,4 @@
-#include "zf_common_headfile.h"
+	#include "zf_common_headfile.h"
 #include "Motor.h"
 
 #define PIT                             (TIM6_PIT )                             // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
@@ -12,6 +12,9 @@ pwm_channel_enum channel_list[2] = {TIM5_PWM_CH2_A1, TIM5_PWM_CH4_A3};
 	
  	gpio_init(A0, GPO, GPIO_LOW, GPO_PUSH_PULL);                               // 初始化 MOTOR1_DIR 输出
 	gpio_init(A2, GPO, GPIO_LOW, GPO_PUSH_PULL);                               // 初始化 MOTOR2_DIR 输出
+	gpio_init(B12, GPO, GPIO_LOW, GPO_PUSH_PULL);                               
+	gpio_init(B14, GPO, GPIO_LOW, GPO_PUSH_PULL);
+	 gpio_init(B9, GPO, GPIO_LOW, GPO_PUSH_PULL);
 
 	pwm_init(TIM5_PWM_CH2_A1, 17000, 0);                                                // 初始化 PWM 通道 频率 17KHz 初始占空比 0%
     pwm_init(TIM5_PWM_CH4_A3, 17000, 0);
@@ -30,10 +33,12 @@ pwm_channel_enum channel_list[2] = {TIM5_PWM_CH2_A1, TIM5_PWM_CH4_A3};
 		if (MotorNum == 0)
 		{
 			gpio_set_level(A0,GPIO_HIGH);
+			gpio_set_level(B12,GPIO_LOW);
 		}
 		else if (MotorNum == 1)
 		{
 			gpio_set_level(A2,GPIO_HIGH);
+			gpio_set_level(B14,GPIO_LOW);
 		}
 		pwm_set_duty(channel_list[MotorNum], Speed);
 	 }
@@ -42,10 +47,12 @@ pwm_channel_enum channel_list[2] = {TIM5_PWM_CH2_A1, TIM5_PWM_CH4_A3};
 		if (MotorNum == 0)
 		 {
 			gpio_set_level(A0,GPIO_LOW);
+			gpio_set_level(B12,GPIO_HIGH);
 		 }
 		 else if (MotorNum == 1)
 		 {
 			gpio_set_level(A2,GPIO_LOW);
+			gpio_set_level(B14,GPIO_HIGH);
 		 }
 		 pwm_set_duty(channel_list[MotorNum], -Speed);
 	 }

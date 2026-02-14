@@ -6,4 +6,6 @@ void Control_Vel (void);
 void Control_Dir (void);
 void Control_Target(int x, int y);
 
+extern int fall;
+
 #endif

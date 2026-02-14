@@ -69,25 +69,28 @@ int time=0;
 
 void TIM6_IRQHandler (void)
 {
-	
-    time++;
-	
-    if (time % 5 == 0)
-    {
-        Control_Bal();
-    }
-    if (time % 10 == 0)
-    {
-        Control_Vel();
-    }
-    if (time % 15 == 0)
-    {
-        Control_Dir();
-    }
-    if (time == 30)
-    {
-        time = 0;
-    }
+	if (gpio_get_level(D3))	
+	{
+		time++;
+		
+		if (time % 5 == 0)
+		{
+			Control_Bal();
+		}
+		if (time % 10 == 0)
+		{
+			Control_Vel();
+		}
+		if (time % 15 == 0)
+		{
+			Control_Dir();
+		}
+		if (time == 30)
+		{
+			time = 0;
+		}
+	}
+	else fall = 0;
     TIM6->SR &= ~TIM6->SR;                                                      // 清空中断状态
 }
 

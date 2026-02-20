@@ -7,7 +7,7 @@
 
 ComplementaryFilter_t IMU;
 
-int S1,S2,AveOut,DifOut,AveSpd,DifSpd,VelTarget,DirTarget;
+int S1,S2,AveOut,DifOut,AngleOut,AveSpd,DifSpd,VelTarget,DirTarget;
 int fall=0;
 
 void Control_Bal(void)
@@ -23,6 +23,7 @@ void Control_Bal(void)
     AveSpd = (S1 + S2) / 2;
     DifSpd = S1 - S2;
 
+	Target = VelTarget - AngleOut; 
     Actual = IMU.roll * 100;
     Err1 = Err0;
     Err0 = Target - Actual;
@@ -31,9 +32,26 @@ void Control_Bal(void)
     if (ErrInt > 100000) ErrInt = 100000;
     if (ErrInt < -100000) ErrInt = -100000;
 
-    AveOut = ((bal_pid_data.kp * 2) * Err0 + bal_pid_data.ki * ErrInt / 30 + bal_pid_data.kd * (Err0 - Err1) + 6)/10;
+    AveOut = ((bal_pid_data.kp * 2) * Err0 + bal_pid_data.ki * ErrInt / 30 + bal_pid_data.kd * 2 * (Err0 - Err1) + 5)/10;
 
 	int pa=AveOut + DifOut,pb=AveOut - DifOut;
+	
+	if (pa<0) 
+		pa-=400;
+	else if (pa>0)
+		pa+=400;
+	
+	if (pb<0)
+		pb-=400;
+	else if (pb>0)
+		pb+=400;
+
+//	if (Actual > 1500 || Actual < - 1500) 
+//	{
+//		pa *= 1.2;
+//		pb *= 1.2;
+//	}
+	
 	if (pa>10000) pa=10000;
 	if (pb>10000) pb=10000;
 	if (pa<-10000) pa=-10000;
@@ -48,7 +66,7 @@ void Control_Bal(void)
     */
 	
 	
-	if (IMU.roll <30 && IMU.roll >-30 && !fall)
+	if (IMU.roll <50 && IMU.roll >-50 && !fall)
 	{
 		Motor_Setspeed(pa, 0);
 		Motor_Setspeed(pb, 1);
@@ -68,7 +86,7 @@ void Control_Bal(void)
 		fall = 1;
 	}
 	
-	printf("%f,%d,%d\n",IMU.roll,S1,DifOut);
+	printf("%f,%d,%d,%d,%d\n",IMU.roll,AngleOut,S2,pa);
 }
 
 void Control_Vel(void)
@@ -80,7 +98,13 @@ void Control_Vel(void)
     Err0 = VelTarget - Actual;
     ErrInt += Err0;
 
-    Out = vel_pid_data.kp * Err0 + vel_pid_data.ki * ErrInt + vel_pid_data.kd * (Err0 - Err1);
+	if (ErrInt > 10000) {ErrInt = 10000;}
+	if (ErrInt < -10000) {ErrInt = -10000;}
+	
+    AngleOut = (vel_pid_data.kp * Err0 * 2
+            + (vel_pid_data.ki * 2 * ErrInt) / 200.0f 
+            + vel_pid_data.kd * (Err0 - Err1) 
+            + 5) / 10;
 }
 
 void Control_Dir(void)
@@ -92,8 +116,7 @@ void Control_Dir(void)
     Err0 = DirTarget - Actual;
     ErrInt += Err0;
 
-    DifOut = 0;
-	//dir_pid_data.kp * Err0 + dir_pid_data.ki * ErrInt + dir_pid_data.kd * (Err0 - Err1);
+    DifOut = dir_pid_data.kp * Err0 + dir_pid_data.ki * ErrInt + dir_pid_data.kd * (Err0 - Err1);
 }
 
 void Control_Target(int x, int y)

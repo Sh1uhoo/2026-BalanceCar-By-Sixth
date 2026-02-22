@@ -7,6 +7,7 @@ void Menu_Switch(Menu_States *self, Menu_Item *top) {
   self->select_index = top->entry_count ? 0 : -1;
   self->cur_mode = MENU_Mode_Normal;
   self->stack_top = 0;
+  self->render_mode = MENU_Render_TextMode;
 }
 // NOTE: When stack depth won't increase, return NULL
 static Menu_Item *MNormal_Next(Menu_States *, int);
@@ -108,42 +109,52 @@ void Menu_OLED_WriteText(Menu_States *this) {
   OLED_Text_Handle *hnd = this->handle;
   Menu_Item *current = this->current;
   OLED_Text_Fill(hnd, ' ', STY_NONE);
-  uint8_t line = 0;
-  if (!(current->attributes & MENU_Item_NoTitle) && hnd->height > 1) {
-    OLED_Text_Write2(hnd, line, 0, current->name,
-                     hnd->width - (hnd->width > 8 ? 3 : 0), STY_NONE);
-    if (hnd->width > 8) {
-      const char *mode_str = "[N]";
-      if (this->cur_mode == MENU_Mode_Change)
-        mode_str = "[C]";
-      OLED_Text_Write(hnd, line, hnd->width - 3, mode_str, STY_NONE);
+  if (current->attributes & MENU_Item_NoRender) {
+    this->render_mode = MENU_Render_Otherwise;
+    current->fn_render(0, this, current->userp);
+  } else {
+    this->render_mode = MENU_Render_TextMode;
+    uint8_t line = 0;
+    if (!(current->attributes & MENU_Item_NoTitle) && hnd->height > 1) {
+      OLED_Text_Write2(hnd, line, 0, current->name,
+                       hnd->width - (hnd->width > 8 ? 3 : 0), STY_NONE);
+      if (hnd->width > 8) {
+        const char *mode_str = "[N]";
+        if (this->cur_mode == MENU_Mode_Change)
+          mode_str = "[C]";
+        OLED_Text_Write(hnd, line, hnd->width - 3, mode_str, STY_NONE);
+      }
+      line++;
     }
-    line++;
-  }
-  int i, endi;
-  if (current->entry_count > (hnd->height - line)) {
-    i = this->select_index > 1 ? this->select_index : 0;
-    endi = i + (hnd->height - line);
-    if (endi > current->entry_count)
+    int i, endi;
+    if (current->entry_count > (hnd->height - line)) {
+      i = this->select_index > 1 ? this->select_index : 0;
+      endi = i + (hnd->height - line);
+      if (endi > current->entry_count)
+        endi = current->entry_count;
+    } else if (current->entry_count > 0) {
+      i = 0;
       endi = current->entry_count;
-  } else if (current->entry_count > 0) {
-    i = 0;
-    endi = current->entry_count;
-  } else
-    return;
-  for (Menu_Item *cur; i < endi; ++i) {
-    cur = &current->entries[i];
-    int end = OLED_Text_WriteText(hnd, line, 1, cur->name);
-    if (i == this->select_index) {
-      OLED_Text_WriteText(hnd, line, 0, ">");
-      OLED_Text_WriteStyle(hnd, line, 0, STY_InverseColor);
+    } else
+      return;
+    for (Menu_Item *cur; i < endi; ++i) {
+      cur = &current->entries[i];
+      int end = OLED_Text_WriteText(hnd, line, 1, cur->name);
+      if (i == this->select_index) {
+        OLED_Text_WriteText(hnd, line, 0, ">");
+        OLED_Text_WriteStyle(hnd, line, 0, STY_InverseColor);
+      }
+      if (cur->fn_on_put)
+        cur->fn_on_put(line, end, cur->userp);
+      line++;
     }
-    if (cur->fn_on_put)
-      cur->fn_on_put(line, end, cur->userp);
-    line++;
   }
 }
 void Menu_OLED_Put(Menu_States *self) {
-  OLED_Text_Put(self->handle);
-  OLED_Text_SwapBuffer(self->handle);
+  if (self->render_mode == MENU_Render_TextMode) {
+    OLED_Text_Put(self->handle);
+    OLED_Text_SwapBuffer(self->handle);
+  } else {
+    self->current->fn_render(1, self, self->current->userp);
+  }
 }

@@ -18,6 +18,7 @@ enum {
   // 标记选项不能进入。例如数据条目显示
   MENU_Item_NoEnter = 0x4,
   MENU_Item_ChangedFlag = 0x8000,
+  MENU_Item_NoRender = 0x8,
 };
 enum {
   MENU_Input_Enter = 'L',
@@ -33,6 +34,7 @@ enum {
   MENU_Input_ScrollUnderBound = MENU_Input_ScrollZeroPoint - 127,
   MENU_Input_ScrollUpperBound = MENU_Input_ScrollZeroPoint + 127,
 };
+enum { MENU_Render_TextMode = 0, MENU_Render_Otherwise = 2 };
 struct Menu_States_St;
 struct Menu_Item_St {
   const char *name;
@@ -57,6 +59,9 @@ struct Menu_Item_St {
   int (*fn_acq_input)(struct Menu_States_St *,
                       void (*fn_proc)(struct Menu_States_St *, int input),
                       void *userp);
+  // 使用此函数来进行整个屏幕的渲染（如果需要），mode
+  // 表示模式，0表示渲染，1表示发送（两阶段）
+  void (*fn_render)(int mode, struct Menu_States_St *, void *userp);
 };
 typedef struct Menu_Item_St Menu_Item;
 struct Menu_States_St {
@@ -66,6 +71,8 @@ struct Menu_States_St {
   Menu_Item *ptr_stack[MENU_STACK_MAX];
   int16_t ind_stack[MENU_STACK_MAX];
   int32_t stack_top;
+
+  int render_mode;
 
   OLED_Text_Handle *handle;
 };
